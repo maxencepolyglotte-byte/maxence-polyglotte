@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maxence Polyglotte — Immersion Arabe</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://js.stripe.com/v3/"></script>
+
 <style>
   :root {
     --bg: #0e0c0a;
@@ -667,15 +667,14 @@
 const SUPABASE_URL  = 'https://namigstwklqfdwqzzxcc.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_sW2G6hCuOqXtT7wGXlJSqA_dPys2Rpa';
 const STRIPE_PK     = 'pk_live_51Jw1eBIVXJMSUleiOVVoRfBL69sqzC3L1mfHCGurBUi2abpTZUvTCciJLd1MaphndOGeeGKDpjrUtyszIJWDRV1r00J7wOSZhQ';
-const PRICE_MONTHLY = 'price_1TOka6IVXJMSUlei0oIGn3SY';
-const PRICE_YEARLY  = 'price_1TOkbAIVXJMSUleiFaq20buY';
+const PAYMENT_LINK_MONTHLY = 'https://buy.stripe.com/3cIdRa8Cp7eCg2dgIZ2Nq00';
+const PAYMENT_LINK_YEARLY  = 'https://buy.stripe.com/bJe28s2e1gPc9DP8ct2Nq01';
 
 // ─────────────────────────────────────────────
 // SUPABASE CLIENT (CDN)
 // ─────────────────────────────────────────────
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const stripe   = Stripe(STRIPE_PK);
 
 // ─────────────────────────────────────────────
 // DATA
@@ -1056,31 +1055,10 @@ window.selectPlan = (plan) => {
   document.getElementById('plan-yearly').classList.toggle('selected',  plan==='yearly');
 };
 
-window.startCheckout = async () => {
-  if (!user) { closePaywall(); return; }
-  const btn   = document.getElementById('btn-subscribe');
-  const label = document.getElementById('subscribe-label');
-  btn.disabled = true;
-  label.innerHTML = '<div class="loading-spinner"></div>';
-
-  const priceId = selectedPlan==='yearly' ? PRICE_YEARLY : PRICE_MONTHLY;
-
-  // Crée une Checkout Session via Stripe Payment Links
-  // (sans backend : on utilise les Payment Links Stripe directement)
-  // Pour une vraie intégration serveur, remplacer par un appel à ton Edge Function
-  const { error } = await stripe.redirectToCheckout({
-    lineItems: [{ price: priceId, quantity: 1 }],
-    mode: 'subscription',
-    successUrl: window.location.href + '?premium=success',
-    cancelUrl:  window.location.href + '?premium=cancel',
-    customerEmail: user.email,
-  });
-
-  if (error) {
-    showSnack('Erreur Stripe : ' + error.message);
-    btn.disabled = false;
-    label.textContent = 'Commencer maintenant →';
-  }
+window.startCheckout = () => {
+  const baseUrl = selectedPlan === 'yearly' ? PAYMENT_LINK_YEARLY : PAYMENT_LINK_MONTHLY;
+  const email   = user ? `?prefilled_email=${encodeURIComponent(user.email)}` : '';
+  window.location.href = baseUrl + email;
 };
 
 // Retour depuis Stripe
