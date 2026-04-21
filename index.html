@@ -775,14 +775,18 @@ window.submitAuth = async () => {
     errEl.textContent = result.error.message;
     btn.disabled = false;
     btn.textContent = window._authMode === 'login' ? 'Se connecter' : 'Créer mon compte';
+  } else if (result.data.session) {
+    // Connexion ou inscription avec session directe → on lance l'app
+    user = result.data.session.user;
+    await loadProfile();
+    bootApp();
   } else {
-    if (window._authMode === 'signup' && !result.data.session) {
-      errEl.style.color = '#4ade80';
-      errEl.textContent = '✓ Vérifie ton email pour confirmer ton compte.';
-      btn.disabled = false;
-      btn.textContent = 'Créer mon compte';
-    }
-    // session listener va prendre le relais
+    // Inscription sans confirmation email
+    errEl.style.color = '#4ade80';
+    errEl.textContent = '✓ Compte créé ! Connecte-toi maintenant.';
+    btn.disabled = false;
+    btn.textContent = 'Créer mon compte';
+    authMode('login');
   }
 };
 
